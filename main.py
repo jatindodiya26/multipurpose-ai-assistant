@@ -305,9 +305,10 @@ def chat(request: ChatRequest):
     # --------------------------------------------------
 
     response = run_agent(
-        request.message,
-        chat_history
-    )
+    user_input=request.message,
+    chat_history=chat_history,
+    user_id=request.user_id
+)
 
 
     # --------------------------------------------------

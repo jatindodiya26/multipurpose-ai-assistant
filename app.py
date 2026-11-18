@@ -5,9 +5,9 @@ import streamlit as st
 
 from rag import (
     add_pdf_to_vectorstore,
-    delete_pdf
+    delete_pdf,
+    get_user_pdfs
 )
-
 
 # ==================================================
 # PAGE CONFIGURATION
@@ -894,7 +894,8 @@ with st.sidebar:
                             document_id
                         ) = add_pdf_to_vectorstore(
                             file_path,
-                            uploaded_file.name
+                            uploaded_file.name,
+                            st.session_state.user["id"]
                         )
 
 
@@ -936,6 +937,7 @@ with st.sidebar:
                     )
 
 
+    
     # ==================================================
     # UPLOADED PDFS
     # ==================================================
@@ -944,36 +946,19 @@ with st.sidebar:
 
     st.subheader("📚 Uploaded PDFs")
 
+    user_id = st.session_state.user["id"]
 
-    data_folder = "data"
-
-    pdf_files = []
-
-
-    if os.path.exists(data_folder):
-
-        pdf_files = [
-            file
-            for file in os.listdir(data_folder)
-            if file.lower().endswith(".pdf")
-        ]
-
+    # Get only PDFs belonging to the logged-in user
+    pdf_files = get_user_pdfs(user_id)
 
     if pdf_files:
 
         for pdf in pdf_files:
-
-            st.write(
-                f"📄 {pdf}"
-            )
-
+            st.write(f"📄 {pdf}")
 
     else:
 
-        st.info(
-            "No PDFs uploaded yet."
-        )
-
+        st.info("No PDFs uploaded yet.")
 
     # ==================================================
     # REMOVE PDF
@@ -983,12 +968,10 @@ with st.sidebar:
 
         st.subheader("🗑️ Remove PDF")
 
-
         pdf_to_remove = st.selectbox(
             "Select a PDF",
             pdf_files
         )
-
 
         if st.button(
             "Remove PDF",
@@ -996,22 +979,11 @@ with st.sidebar:
         ):
 
             success, message = delete_pdf(
-                pdf_to_remove
+                pdf_to_remove,
+                user_id
             )
 
-
             if success:
-
-                file_path = os.path.join(
-                    data_folder,
-                    pdf_to_remove
-                )
-
-
-                if os.path.exists(file_path):
-
-                    os.remove(file_path)
-
 
                 st.success(
                     f"{pdf_to_remove} "
@@ -1022,10 +994,10 @@ with st.sidebar:
 
                 st.rerun()
 
-
             else:
 
                 st.error(message)
+
 
 
 # ==================================================
